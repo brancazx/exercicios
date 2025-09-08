@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!-- Define que o documento está usando HTML5 -->
+<html lang="pt-br">
+<!-- Define o idioma da página como português do Brasil -->
+<head>
+  <meta charset="UTF-8">
+  <!-- Define a codificação de caracteres como UTF-8 (suporta acentos) -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Torna a página responsiva em dispositivos móveis -->
+
+  <title>Lanchonete Escolar</title>
+  <!-- Título que aparece na aba do navegador -->
+
+  <style>
+    /* Estilos CSS integrados diretamente no HTML */
+
+    body {
+      /* Estilo geral da página */
+      font-family: Arial, sans-serif; /* Fonte do texto */
+      margin: 0; /* Remove margens padrão */
+      padding: 0; /* Remove espaçamentos padrão */
+      background-color: #fdf6e3; /* Cor de fundo clara */
+      color: #333; /* Cor do texto */
+    }
+
+    header {
+      /* Estilo do cabeçalho */
+      background-color: #ffcc00; /* Fundo amarelo */
+      padding: 20px; /* Espaçamento interno */
+      text-align: center; /* Centraliza o conteúdo */
+    }
+
+    .logo {
+      /* Estilo da imagem do logo */
+      width: 80px; /* Largura da imagem */
+      height: auto; /* Altura proporcional */
+      margin-bottom: 10px; /* Espaço abaixo da imagem */
+    }
+
+    h1 {
+      /* Estilo do título principal */
+      margin: 0; /* Remove margem padrão */
+      font-size: 2.5em; /* Tamanho grande da fonte */
+    }
+
+    .cardapio {
+      /* Estilo da seção do cardápio */
+      padding: 20px; /* Espaçamento interno */
+    }
+
+    .cardapio h2 {
+      /* Estilo do subtítulo do cardápio */
+      font-size: 2em; /* Tamanho médio da fonte */
+      margin-bottom: 10px; /* Espaço abaixo do título */
+    }
+
+    .cardapio ul {
+      /* Estilo da lista de itens */
+      list-style-type: none; /* Remove bolinhas da lista */
+      padding: 0; /* Remove espaçamento interno */
+    }
+
+    .cardapio li {
+      /* Estilo de cada item do cardápio */
+      background-color: #fff8dc; /* Fundo claro */
+      margin-bottom: 12px; /* Espaço entre os itens */
+      padding: 10px; /* Espaçamento interno */
+      border-radius: 5px; /* Bordas arredondadas */
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.1); /* Sombra leve */
+      display: flex; /* Alinha imagem e texto lado a lado */
+      align-items: center; /* Centraliza verticalmente */
+      gap: 15px; /* Espaço entre imagem e texto */
+    }
+
+    .cardapio li img {
+      /* Estilo das imagens dos itens */
+      width: 50px; /* Tamanho fixo */
+      height: auto; /* Altura proporcional */
+      border-radius: 5px; /* Bordas arredondadas */
+    }
+
+    footer {
+      /* Estilo do rodapé */
+      background-color: #ffcc00; /* Fundo amarelo */
+      text-align: center; /* Centraliza o texto */
+      padding: 10px; /* Espaçamento interno */
+      position: fixed; /* Fixa no fundo da tela */
+      bottom: 0; /* Alinha ao fundo */
+      width: 100%; /* Ocupa toda a largura */
+    }
+  </style>
+</head>
+<body>
+  <!-- Início do conteúdo visível da página -->
+
+  <header>
+    <!-- Cabeçalho com logo e título -->
+    <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="Logo da Lanchonete" class="logo">
+    <h1>Lanchonete Escolar</h1>
+  </header>
+
+  <main>
+    <!-- Conteúdo principal da página -->
+    <section class="cardapio">
+      <!-- Seção do cardápio -->
+      <h2>Cardápio</h2>
+      <ul>
+        <!-- Lista de itens com imagem e preço -->
+        <li>
+          <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" alt="Hambúrguer">
+          Hambúrguer - R$ 8,00
+        </li>
+        <li>
+          <img src="https://cdn-icons-png.flaticon.com/512/1046/1046786.png" alt="Cachorro-quente">
+          Cachorro-quente - R$ 6,00
+        </li>
+        <li>
+          <img src="https://cdn-icons-png.flaticon.com/512/1046/1046785.png" alt="Sanduíche natural">
+          Sanduíche natural - R$ 7,00
+        </li>
+        <li>
+          <img src="https://cdn-icons-png.flaticon.com/512/1046/1046782.png" alt="Suco natural">
+          Suco natural - R$ 5,00
+        </li>
+        <li>
+          <img src="https://cdn-icons-png.flaticon.com/512/1046/1046790.png" alt="Bolo de chocolate">
+          Bolo de chocolate - R$ 4,00
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <!-- Rodapé com informações de contato -->
+    <p>📍 Local: Pátio da escola | 📞 Contato: (41) 99999-0000</p>
+  </footer>
+
+</body>
+</html>
+<link rel="stylesheet" href="style.css">
+Se você quiser usar esse CSS em um arquivo separado, basta:
+
+Criar um arquivo chamado style.css
+
+Colar esse conteúdo nele
+
+No seu HTML, substituir a parte do <style> por
+
+html
