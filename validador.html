@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Validação de Email</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background-color: #e3f2fd; /* Fundo azul claro */
+    }
+
+    form {
+      max-width: 600px; /* Aumentado de 400px para 600px */
+      margin: auto;
+      background-color: #ffffff;
+      padding: 40px; /* Aumentado de 20px para 40px */
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="email"] {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    input[type="submit"] {
+      padding: 12px 25px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #1976d2;
+    }
+
+    .mensagem {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="text-align: center;">Validação de Email</h2>
+  <form id="formEmail">
+    <label for="email">Digite seu email:</label><br>
+    <input type="email" id="email" name="email" required placeholder="exemplo@dominio.com">
+    <input type="submit" value="Enviar">
+    <div class="mensagem" id="mensagem"></div>
+  </form>
+
+  <script>
+    const form = document.getElementById('formEmail');
+    const mensagem = document.getElementById('mensagem');
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault(); // impede o envio real do formulário
+
+      const emailInput = document.getElementById('email');
+      
+      if (emailInput.validity.valid) {
+        mensagem.textContent = "E-mail válido!";
+        mensagem.style.color = "green";
+      } else {
+        mensagem.textContent = "Por favor, insira um e-mail válido.";
+        mensagem.style.color = "red";
+      }
+    });
+  </script>
+
+</body>
+</html>

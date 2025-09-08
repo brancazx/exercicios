@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jogo da Palavra Secreta</title>
+</head>
+<body>
+    <h1>Tente advinhar a palavra secreta!</h1>
+    <input type="text" id="palavrainput">
+    <button onclick="verificarPalavra()">Enviar</button>
+    <p id="mensagem"></p>
+
+    <script> const palavraSecreta = "abracadabra";
+
+    function verificarPalavra() {
+    const palavraDigitada = document.getElementById("palavraInput").value.toLowerCase();
+
+    const mensagemElemento = document.getElementById("mensagem");
+    if (palavraDigitada === palavraSecreta) {
+        mensagemElemento.textContent = "Parabéns! você acertou!" }
+        else {
+            mensagemElemento.textContent = "Tente novamente.";
+        }
+    } </script>
+</body>
+</html>

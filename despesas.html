@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Despesas</title>
+</head>
+<body>
+    <label for="salario">Salário</label><br></br>
+    <input type="number" id="salario">
+
+    <label for="despesas1">despesas 1</label>
+    <input type="despesas1" id="despesas1">
+
+    <label for="despesas2">despesas 2</label>
+    <input type="despesas2" id="despesas2">
+
+    <label for="despesas3">despesas 3</label>
+    <input type="despesas3" id="despesas3">
+
+    <button onclick="calcularsaldo()">Calcular saldo</button>
+
+    <script>
+        function calcularsaldo() {
+           var salario= parseFloat(document.getElementById("salario").value);
+           var despesas1= parseFloat(document.getElementById("despesas1").value);
+           var despesas2= parseFloat(document.getElementById("despesas2").value);
+           var despesas3= parseFloat(document.getElementById("despesas3").value);
+
+           var saldo=salario-despesas1-despesas2-despesas3;
+           var totaldespesas= despesas1+despesas2+despesas3;
+           var percentual1= (despesas1/totaldespesas)*100;
+           var percentual2= (despesas2/totaldespesas)*100;
+           var percentual3= (despesas3/totaldespesas)*100;
+
+           document.getElementById("saldo").textContent = saldo.toFixed(2);
+           document.getElementById("percentual1").textContent = percentual1.toFixed(2)"%";
+           document.getElementById("percentual2").textContent = percentual2.toFixed(2)"%";
+           document.getElementById("percentual3").textContent = percentual3.toFixed(2)"%";
+           
+        }
+           </script>
+
+<p>O saldo é: <span id="saldo"></span></p>
+<p>O total das despesas é: <span id="totaldespesas"></span></p>
+<p>O percentual da despesa 01 é: <span id="percentual1"></span></p>
+<p>O percentual da despesa 02 é: <span id="percentual2"></span></p>
+<p>O percentual da despesa 03 é: <span id="percentual3"></span></p>
+</body>
+</html>

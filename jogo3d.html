@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Corrida 3D 🚗💨</title>
+  <style>
+    body { margin:0; overflow:hidden; background:#87CEEB; font-family:Arial,sans-serif; }
+    #hud {
+      position:absolute; top:20px; left:20px; z-index:10; color:white;
+      font-size:22px; font-weight:bold; background:rgba(0,0,0,0.4);
+      padding:10px 20px; border-radius:10px;
+    }
+    #menu {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.85); display:flex; flex-direction:column;
+      align-items:center; justify-content:center; color:white; z-index:20;
+    }
+    button {
+      padding:12px 25px; font-size:18px; border:none; border-radius:8px;
+      cursor:pointer; background:#ff4444; color:white; font-weight:bold;
+    }
+    button:hover { background:#ff2222; }
+
+    /* Novo estilo Game Over */
+    #gameOver {
+      position:absolute; 
+      top:50%; left:50%; 
+      transform:translate(-50%,-50%);
+      padding:40px 60px;
+      background:rgba(0,0,0,0.85);
+      border-radius:20px;
+      text-align:center;
+      display:none; 
+      z-index:15;
+      opacity:0;
+      transition:opacity 0.8s ease;
+    }
+    #gameOver.show {
+      display:block;
+      opacity:1;
+    }
+    #gameOver h2 {
+      font-size:60px; 
+      margin:0 0 20px;
+      background:linear-gradient(90deg, #ff3333, #ff8800);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      text-shadow:2px 2px 8px rgba(0,0,0,0.7);
+    }
+    #gameOver p {
+      font-size:26px;
+      color:#fff;
+      margin:10px 0;
+    }
+    #restartBtn {
+      margin-top:20px;
+      padding:12px 28px;
+      font-size:20px;
+      border:none;
+      border-radius:10px;
+      cursor:pointer;
+      background:linear-gradient(90deg,#ff8800,#ff3333);
+      color:white;
+      font-weight:bold;
+      box-shadow:0 4px 12px rgba(0,0,0,0.4);
+      transition:transform 0.2s, background 0.2s;
+    }
+    #restartBtn:hover {
+      transform:scale(1.05);
+      background:linear-gradient(90deg,#ff3333,#ff8800);
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">Pontuação: <span id="score">0</span></div>
+  <div id="menu">
+    <h1>🚗 Corrida 3D</h1>
+    <button id="startBtn">Jogar</button>
+  </div>
+  <div id="gameOver">
+    <h2>GAME OVER</h2>
+    <p id="finalScore"></p>
+    <button id="restartBtn">🔄 Reiniciar</button>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
+  <script>
+  const canvas = document.getElementById("gameCanvas");
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.set(0,15,20);
+
+  // luzes
+  scene.add(new THREE.HemisphereLight(0xffffff,0x444444,0.9));
+  const dir = new THREE.DirectionalLight(0xffffff,0.8);
+  dir.position.set(20,40,20);
+  scene.add(dir);
+
+  // chão (grama)
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(200,200),
+    new THREE.MeshStandardMaterial({color:0x228B22})
+  );
+  ground.rotation.x = -Math.PI/2;
+  scene.add(ground);
+
+  // pista
+  const road = new THREE.Mesh(
+    new THREE.PlaneGeometry(12,200),
+    new THREE.MeshStandardMaterial({color:0x333333})
+  );
+  road.rotation.x = -Math.PI/2;
+  road.position.y = 0.01;
+  scene.add(road);
+
+  // faixas
+  const stripes = [];
+  for(let i=0;i<20;i++){
+    const stripe = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.5,4),
+      new THREE.MeshBasicMaterial({color:0xffffff})
+    );
+    stripe.rotation.x = -Math.PI/2;
+    stripe.position.set(0,0.02,-i*10);
+    scene.add(stripe);
+    stripes.push(stripe);
+  }
+
+  // Função: criar rodas
+  function criarRoda(){
+    const roda = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.4,0.4,0.3,16),
+      new THREE.MeshStandardMaterial({color:0x000000})
+    );
+    roda.rotation.z = Math.PI/2;
+    return roda;
+  }
+
+  // Função: criar carro
+  function criarCarro(cor){
+    const carro = new THREE.Group();
+
+    // corpo
+    const corpo = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5,0.6,3),
+      new THREE.MeshStandardMaterial({color:cor})
+    );
+    corpo.position.y = 0.6;
+    carro.add(corpo);
+
+    // cabine
+    const cabine = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2,0.5,1.2),
+      new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:0.8})
+    );
+    cabine.position.set(0,1,-0.2);
+    carro.add(cabine);
+
+    // rodas
+    const offsets = [
+      [-0.8,0.3,1.2], [0.8,0.3,1.2], // frente
+      [-0.8,0.3,-1.2], [0.8,0.3,-1.2] // traseira
+    ];
+    offsets.forEach(pos=>{
+      const r = criarRoda();
+      r.position.set(...pos);
+      carro.add(r);
+    });
+
+    return carro;
+  }
+
+  // Jogador
+  const player = criarCarro(0xff8800);
+  player.position.set(0,0,10);
+  scene.add(player);
+
+  // inimigos
+  const enemies = [];
+  function spawnEnemy(){
+    const cores = [0x9933ff, 0xff3333, 0x33ccff, 0xffff33];
+    const enemy = criarCarro(cores[Math.floor(Math.random()*cores.length)]);
+    enemy.position.set((Math.random()*2-1)*4,0, -60 - Math.random()*20);
+    scene.add(enemy);
+    enemies.push(enemy);
+  }
+
+  // árvores
+  const arvores = [];
+  function criarArvore(x,z){
+    const tronco = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25,0.25,1.2),
+      new THREE.MeshStandardMaterial({color:0x8B4513})
+    );
+    tronco.position.y = 0.6;
+    const copa = new THREE.Mesh(
+      new THREE.SphereGeometry(1,12,12),
+      new THREE.MeshStandardMaterial({color:0x006400})
+    );
+    copa.position.y = 2;
+    const arvore = new THREE.Group();
+    arvore.add(tronco);
+    arvore.add(copa);
+    arvore.position.set(x,0,z);
+    scene.add(arvore);
+    arvores.push(arvore);
+  }
+
+  for(let i=0;i<30;i++){
+    criarArvore(-10, -i*8);
+    criarArvore(10, -i*8);
+  }
+
+  // nuvens
+  const nuvens = [];
+  function criarNuvem(x,y,z){
+    const nuvem = new THREE.Group();
+    const geom = new THREE.SphereGeometry(1.5,12,12);
+    const mat = new THREE.MeshStandardMaterial({color:0xffffff});
+    for(let i=0;i<3;i++){
+      const p = new THREE.Mesh(geom,mat);
+      p.position.set(i*1.2,0,Math.random()*1-0.5);
+      nuvem.add(p);
+    }
+    nuvem.position.set(x,y,z);
+    scene.add(nuvem);
+    nuvens.push(nuvem);
+  }
+
+  for(let i=0;i<8;i++){
+    criarNuvem(-20+Math.random()*40, 15+Math.random()*5, -i*25);
+  }
+
+  // HUD
+  const scoreEl = document.getElementById("score");
+  const gameOverEl = document.getElementById("gameOver");
+  let score=0, alive=false, gameOver=false;
+  let spawnTimer=0;
+
+  // controles
+  const keys={};
+  document.addEventListener("keydown", e=> keys[e.code]=true);
+  document.addEventListener("keyup", e=> keys[e.code]=false);
+
+  function resetGame(){
+    enemies.forEach(e=>scene.remove(e));
+    enemies.length=0;
+    player.position.set(0,0,10);
+    score=0;
+    gameOver=false;
+    scoreEl.textContent=0;
+    gameOverEl.classList.remove("show");
+    alive=true;
+  }
+
+  document.getElementById("startBtn").onclick=()=>{
+    document.getElementById("menu").style.display="none";
+    resetGame();
+  };
+
+  function animate(){
+    requestAnimationFrame(animate);
+    if(alive && !gameOver){
+      // controles
+      if(keys["ArrowLeft"] && player.position.x>-5) player.position.x-=0.2;
+      if(keys["ArrowRight"] && player.position.x<5) player.position.x+=0.2;
+
+      // faixas
+      stripes.forEach(s=>{
+        s.position.z+=0.5;
+        if(s.position.z>20) s.position.z=-180;
+      });
+
+      // árvores
+      arvores.forEach(a=>{
+        a.position.z+=0.5;
+        if(a.position.z>20) a.position.z=-200;
+      });
+
+      // nuvens
+      nuvens.forEach(n=>{
+        n.position.x+=0.01;
+        if(n.position.x>25) n.position.x=-25;
+      });
+
+      // inimigos
+      spawnTimer++;
+      if(spawnTimer>60){
+        spawnEnemy();
+        spawnTimer=0;
+      }
+      enemies.forEach(e=>{ e.position.z+=0.4; });
+
+      // colisão
+      const playerBox = new THREE.Box3().setFromObject(player);
+      for(const e of enemies){
+        const eBox = new THREE.Box3().setFromObject(e);
+        if(playerBox.intersectsBox(eBox)){
+          gameOver=true;
+          gameOverEl.querySelector("#finalScore").textContent = "Pontuação: " + score;
+          gameOverEl.classList.add("show");
+        }
+      }
+
+      // pontuação
+      score++;
+      scoreEl.textContent=score;
+    }
+
+    // camera
+    camera.position.x = player.position.x*0.5;
+    camera.lookAt(player.position.x,0,player.position.z-5);
+
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  document.getElementById("restartBtn").onclick = ()=> resetGame();
+
+  document.addEventListener("keydown", e=>{
+    if(gameOver && e.code==="Enter"){ resetGame(); }
+  });
+
+  window.addEventListener("resize",()=>{
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+  </script>
+</body>
+</html>
