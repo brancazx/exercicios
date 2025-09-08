@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo de Carro</title>
+  <style>
+    canvas { background: #000; display: block; margin: 0 auto; }
+    #menu { text-align: center; margin-top: 20px; }
+    button { padding: 10px 20px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <div id="menu">
+    <button id="startBtn">Iniciar Jogo</button>
+  </div>
+  <canvas id="gameCanvas" width="500" height="700"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const largura = canvas.width;
+    const altura = canvas.height;
+
+    const startBtn = document.getElementById("startBtn");
+    const menu = document.getElementById("menu");
+
+    // -------------------
+    // CARRO DO JOGADOR
+    // -------------------
+    let carro = { x: largura / 2 - 25, y: altura - 120, w: 50, h: 80, vel: 5 };
+
+    // -------------------
+    // INIMIGOS
+    // -------------------
+    let inimigos = [];
+    const inimigoW = 50;
+    const inimigoH = 80;
+    const velInimigo = 3;
+    let tempoSpawn = 0;
+
+    // -------------------
+    // PISTA
+    // -------------------
+    let linhaPista = 0;
+    const velPista = 5;
+
+    // -------------------
+    // TECLAS
+    // -------------------
+    let teclas = {};
+    document.addEventListener("keydown", e => teclas[e.key] = true);
+    document.addEventListener("keyup", e => teclas[e.key] = false);
+
+    // -------------------
+    // VARIÁVEIS DE JOGO
+    // -------------------
+    let score = 0;
+    let gameOver = false;
+    let jogando = false;
+
+    // -------------------
+    // SOM DE BUZINA
+    // -------------------
+    const somBuzina = new Audio("buzina.mp3");
+
+    // -------------------
+    // FUNÇÕES
+    // -------------------
+    function desenharCarro(x, y, w, h, cor) {
+      ctx.fillStyle = cor;
+      ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = "black";
+      ctx.fillRect(x - 6, y + 5, 8, 25);
+      ctx.fillRect(x + w - 2, y + 5, 8, 25);
+      ctx.fillRect(x - 6, y + h - 30, 8, 25);
+      ctx.fillRect(x + w - 2, y + h - 30, 8, 25);
+    }
+
+    function desenharPista() {
+      ctx.fillStyle = "#228B22";
+      ctx.fillRect(0, 0, largura, altura);
+      ctx.fillStyle = "#444";
+      ctx.fillRect(100, 0, 300, altura);
+      ctx.fillStyle = "#8B4513";
+      ctx.fillRect(95, 0, 10, altura);
+      ctx.fillRect(395, 0, 10, altura);
+      ctx.fillStyle = "white";
+      for (let i = -20; i < altura; i += 60) {
+        ctx.fillRect(245, i + linhaPista, 10, 40);
+      }
+      linhaPista += velPista;
+      if (linhaPista >= 60) linhaPista = 0;
+    }
+
+    function criarInimigo() {
+      const x = Math.floor(Math.random() * (320 - 120)) + 120;
+      inimigos.push({ x, y: -inimigoH, w: inimigoW, h: inimigoH });
+    }
+
+    function moverInimigos() {
+      if (!gameOver) {
+        inimigos.forEach(carro => carro.y += velInimigo);
+        inimigos = inimigos.filter(carro => carro.y < altura);
+      }
+    }
+
+    function verificarColisao() {
+      for (let inimigo of inimigos) {
+        if (carro.x < inimigo.x + inimigo.w &&
+            carro.x + carro.w > inimigo.x &&
+            carro.y < inimigo.y + inimigo.h &&
+            carro.y + carro.h > inimigo.y) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function atualizar() {
+      if (!jogando || gameOver) return;
+
+      if (teclas["ArrowLeft"] && carro.x > 120) carro.x -= carro.vel;
+      if (teclas["ArrowRight"] && carro.x < 330) carro.x += carro.vel;
+
+      tempoSpawn++;
+      if (tempoSpawn > 80) {
+        criarInimigo();
+        tempoSpawn = 0;
+      }
+
+      moverInimigos();
+
+      if (verificarColisao()) gameOver = true;
+
+      score++;
+    }
+
+    function desenhar() {
+      desenharPista();
+      desenharCarro(carro.x, carro.y, carro.w, carro.h, "orange");
+      inimigos.forEach(c => desenharCarro(c.x, c.y, c.w, c.h, "purple"));
+
+      if (jogando && !gameOver) {
+        ctx.fillStyle = "white";
+        ctx.font = "bold 24px Arial";
+        ctx.fillText("Pontuação: " + score, 20, 40);
+      }
+
+      if (gameOver) {
+        ctx.fillStyle = "red";
+        ctx.font = "bold 50px Arial";
+        ctx.fillText("GAME OVER", largura / 2 - 150, altura / 2);
+        ctx.font = "bold 30px Arial";
+        ctx.fillStyle = "yellow";
+        ctx.fillText("Pontuação: " + score, largura / 2 - 90, altura / 2 + 50);
+        ctx.fillStyle = "white";
+        ctx.font = "20px Arial";
+        ctx.fillText("Pressione ENTER para reiniciar", largura / 2 - 160, altura / 2 + 100);
+      }
+    }
+
+    function loop() {
+      atualizar();
+      desenhar();
+      requestAnimationFrame(loop);
+    }
+
+    function resetarJogo() {
+      carro.x = largura / 2 - 25;
+      carro.y = altura - 120;
+      inimigos = [];
+      score = 0;
+      gameOver = false;
+      jogando = true;
+    }
+
+    // -------------------
+    // CONTROLES DE SOM (BUZINA)
+    // -------------------
+    document.addEventListener("keydown", e => {
+      if (gameOver && e.key === "Enter") resetarJogo();
+
+      if (e.key === "b" || e.key === "B") {
+        somBuzina.currentTime = 0;
+        somBuzina.play();
+      }
+    });
+
+    startBtn.addEventListener("click", () => {
+      menu.style.display = "none";
+      resetarJogo();
+    });
+
+    loop();
+  </script>
+</body>
+</html>
