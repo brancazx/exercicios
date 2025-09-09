@@ -1,192 +1,92 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Índice de Arquivos — brancazx/exercicios</title>
-<style>
-:root {
-  --bg: #1a1a1a;
-  --panel: #2a2a2a;
-  --text: #f0f0f0;
-  --muted: #cccccc;
-  --accent: #ff6b6b;
-  --chip: #333333;
-  --border: #444444;
-}
-body { margin:0; font-family:system-ui,sans-serif; background:linear-gradient(180deg,var(--bg),#000); color:var(--text); }
-header { position:sticky; top:0; z-index:5; backdrop-filter:blur(8px); background:linear-gradient(180deg, rgba(42,42,42,.9), rgba(42,42,42,.7)); border-bottom:1px solid var(--border); }
-.wrap { max-width:1100px; margin:0 auto; padding:20px; }
-h1 { margin:0; font-size:1.4rem; display:flex; gap:.6rem; }
-h1 small { opacity:.7; font-weight:500; }
-.controls { display:grid; grid-template-columns:1fr auto; gap:10px; margin-top:12px; align-items:center; }
-.search input { width:100%; background:var(--chip); border:1px solid var(--border); padding:10px 12px; border-radius:12px; color:var(--text); }
-.btn { background:var(--accent); color:#fff; border:0; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(255,107,107,.25);}
-details.dir { border:1px solid var(--border); border-radius:12px; padding:10px 12px; background:#222; margin-bottom:10px; }
-details.dir > summary { cursor:pointer; font-weight:700; list-style:none; }
-ul.files { list-style:none; padding-left:0; margin:8px 0 0; }
-ul.files li { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; padding:6px 8px; border-bottom:1px dashed rgba(255,255,255,.06); }
-ul.files li:last-child { border-bottom:0; }
-.path { font-family:monospace; font-size:.95rem; }
-.badges { display:inline-flex; gap:6px; align-items:center; }
-.badge { font-size:.75rem; padding:3px 8px; border-radius:999px; background:#444; border:1px solid var(--border); color:var(--muted); }
-.row-actions { display:inline-flex; gap:6px; }
-.row-actions a { text-decoration:none; font-size:.85rem; padding:6px 10px; border-radius:10px; border:1px solid var(--border); background:#333; color:var(--text); }
-.row-actions a:hover{ background:#444 }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página Principal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 20px 0;
+      font-size: 2em;
+      font-weight: bold;
+    }
+
+    main {
+      margin: 40px auto;
+      max-width: 800px;
+    }
+
+    .button-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .button-container a {
+      text-decoration: none;
+    }
+
+    .button-container button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 20px 40px;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: 0.3s;
+    }
+
+    .button-container button:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+
+    footer {
+      margin-top: 50px;
+      padding: 20px 0;
+      background-color: #ddd;
+    }
+  </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <h1>📁 Índice de Arquivos <small><code id="repoLabel"></code></small></h1>
-    <div class="controls">
-      <div class="search">
-        <input id="q" type="search" placeholder="Filtrar por nome ou extensão…" />
-      </div>
-      <button id="reload" class="btn">Atualizar</button>
+
+  <header>Página Principal</header>
+
+  <main>
+    <div class="button-container">
+      <a href="https://brancazx.github.io/exercicios11/jogo2d.html" target="_blank">
+        <button>Jogo 2D</button>
+      </a>
+
+      <a href="https://brancazx.github.io/exercicios11/jogo3d.html" target="_blank">
+        <button>Jogo 3D</button>
+      </a>
+
+      <a href="https://brancazx.github.io/exercicios11/Calculadora2tri.html" target="_blank">
+        <button>Calculadora 2 Triângulos</button>
+      </a>
+
+      <a href="https://brancazx.github.io/exercicios11/Repositorio.html" target="_blank">
+        <button>Repositório</button>
+      </a>
     </div>
-  </div>
-</header>
+  </main>
 
-<main class="wrap">
-  <section class="card">
-    <header class="wrap"><strong>Arquivos</strong></header>
-    <div id="tree" class="content"></div>
-  </section>
-</main>
+  <footer>
+    Feito por Branca ZX
+  </footer>
 
-<script>
-const OWNER='brancazx', REPO='exercicios', BRANCH='main';
-document.getElementById('repoLabel').textContent=`${OWNER}/${REPO}`;
-const qs=(s,el=document)=>el.querySelector(s);
-
-let state={flat:[],tree:{},query:''};
-
-async function gh(path=''){
-  const res=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`);
-  if(!res.ok) throw new Error('Falha ao carregar: '+path);
-  return res.json();
-}
-
-async function crawl(dir=''){
-  const items=await gh(dir);
-  let files=[];
-  for(const it of items){
-    if(it.type==='file') files.push(it);
-    else if(it.type==='dir') files.push(...await crawl(it.path));
-  }
-  return files;
-}
-
-// Constroi a árvore de pastas real
-function buildTree(files){
-  const root={};
-  for(const f of files){
-    const parts=f.path.split('/');
-    let cur=root;
-    for(let i=0;i<parts.length;i++){
-      const part=parts[i];
-      if(i===parts.length-1){
-        (cur.__files ||= []).push(f);
-      } else {
-        cur[part] ||= {};
-        cur=cur[part];
-      }
-    }
-  }
-  return root;
-}
-
-function ghPagesUrl(path){ return `https://${OWNER}.github.io/${REPO}/${path}`; }
-
-async function isReactFile(url){
-  try{
-    const res=await fetch(url);
-    const txt=await res.text();
-    return txt.includes('import React') || txt.includes("from 'react'") || txt.includes('React.');
-  }catch{return false;}
-}
-
-async function openInSnack(file){
-  try{
-    const res=await fetch(file.download_url);
-    const code=await res.text();
-    const encoded=encodeURIComponent(code);
-    const url=`https://snack.expo.dev/embedded?platform=web&name=${encodeURIComponent(file.name)}&files[App.js]=${encoded}`;
-    window.open(url,'_blank');
-  }catch(e){ alert('Erro ao abrir no Snack: '+e.message); }
-}
-
-// Renderiza árvore recursivamente
-async function renderDir(obj){
-  const frag=document.createDocumentFragment();
-  const entries=Object.entries(obj).filter(([k])=>k!=='__files').sort(([a],[b])=>a.localeCompare(b));
-
-  for(const [dirName, child] of entries){
-    const details=document.createElement('details'); details.className='dir'; details.open=true;
-    const summary=document.createElement('summary'); summary.textContent=dirName;
-    details.appendChild(summary);
-    details.appendChild(await renderDir(child));
-    frag.appendChild(details);
-  }
-
-  const files=(obj.__files||[]).filter(f=>!state.query||f.name.toLowerCase().includes(state.query.toLowerCase()))
-    .sort((a,b)=>a.name.localeCompare(b.name));
-
-  if(files.length){
-    const ul=document.createElement('ul'); ul.className='files';
-    for(const f of files){
-      const li=document.createElement('li');
-      const left=document.createElement('div'); const right=document.createElement('div'); right.className='row-actions';
-      left.innerHTML=`<span class="path">${f.name}</span>`;
-      const b=document.createElement('span'); b.className='badge'; b.textContent=(f.size/1024).toFixed(1)+' KB';
-      left.appendChild(b);
-
-      const aRaw=document.createElement('a'); aRaw.href=f.download_url; aRaw.target='_blank'; aRaw.textContent='RAW';
-      const aHub=document.createElement('a'); aHub.href=f.html_url; aHub.target='_blank'; aHub.textContent='GitHub';
-      right.append(aRaw,aHub);
-
-      if(f.name.endsWith('.html')){
-        const aPages=document.createElement('a'); aPages.href=ghPagesUrl(f.path); aPages.target='_blank'; aPages.textContent='Pages';
-        right.appendChild(aPages);
-      }
-
-      if(f.name.endsWith('.js')){
-        isReactFile(f.download_url).then(isReact=>{
-          if(isReact){
-            const aSnack=document.createElement('a'); aSnack.href='#'; aSnack.textContent='Snack Expo';
-            aSnack.onclick=ev=>{ev.preventDefault(); openInSnack(f);};
-            right.appendChild(aSnack);
-          }
-        });
-      }
-
-      li.append(left,right);
-      ul.appendChild(li);
-    }
-    frag.appendChild(ul);
-  }
-
-  return frag;
-}
-
-async function render(){
-  const host=document.getElementById('tree'); host.innerHTML='';
-  host.appendChild(await renderDir(state.tree));
-}
-
-async function loadRepo(){
-  const btn=qs('#reload'); btn.disabled=true; btn.textContent='Carregando…';
-  try{
-    state.flat=await crawl('');
-    state.tree=buildTree(state.flat);
-    await render();
-  }catch(e){ alert(e.message); }
-  finally{ btn.disabled=false; btn.textContent='Atualizar'; }
-}
-
-qs('#q').addEventListener('input', e=>{ state.query=e.target.value.toLowerCase(); render(); });
-loadRepo();
-</script>
 </body>
 </html>
