@@ -60,9 +60,11 @@
     <!-- LINKS DO SNACK EXPO -->
     <section class="expo-links" style="margin-bottom: 10px;">
       <strong>Links do Expo React:</strong>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
         <a href="https://snack.expo.dev/@kethallyn/lanchonete" target="_blank" class="btn">Lanchonete</a>
         <a href="https://snack.expo.dev/@kethallyn/controle-financeiro" target="_blank" class="btn">Controle Financeiro</a>
+        <a href="https://snack.expo.dev/@kethallyn/hello" target="_blank" class="btn">Hello</a>
+        <a href="https://snack.expo.dev/@kethallyn/conversor" target="_blank" class="btn">Conversor</a>
       </div>
     </section>
 
@@ -90,9 +92,7 @@
 
     const qs = (s, el=document) => el.querySelector(s);
 
-    const state = {
-      groups: {}, query: ''
-    };
+    const state = { groups: {}, query: '' };
 
     async function gh(path=''){
       const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${encodeURIComponent(BRANCH)}`;
