@@ -50,7 +50,7 @@ ul.files li:last-child { border-bottom:0; }
 
 <main class="wrap">
   <section class="card">
-    <header class="wrap"><strong>Arquivos agrupados</strong></header>
+    <header class="wrap"><strong>Arquivos</strong></header>
     <div id="tree" class="content"></div>
   </section>
 </main>
@@ -60,7 +60,7 @@ const OWNER='brancazx', REPO='exercicios', BRANCH='main';
 document.getElementById('repoLabel').textContent=`${OWNER}/${REPO}`;
 const qs=(s,el=document)=>el.querySelector(s);
 
-let state={groups:{},query:''};
+let state={flat:[],tree:{},query:''};
 
 async function gh(path=''){
   const res=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`);
@@ -78,15 +78,23 @@ async function crawl(dir=''){
   return files;
 }
 
-// Agrupamento pelo nome base (remove última extensão)
-function groupFiles(files){
-  const groups={};
+// Constroi a árvore de pastas real
+function buildTree(files){
+  const root={};
   for(const f of files){
-    const base=f.name.replace(/\.[^/.]+$/,'');
-    groups[base] ||= [];
-    groups[base].push(f);
+    const parts=f.path.split('/');
+    let cur=root;
+    for(let i=0;i<parts.length;i++){
+      const part=parts[i];
+      if(i===parts.length-1){
+        (cur.__files ||= []).push(f);
+      } else {
+        cur[part] ||= {};
+        cur=cur[part];
+      }
+    }
   }
-  return groups;
+  return root;
 }
 
 function ghPagesUrl(path){ return `https://${OWNER}.github.io/${REPO}/${path}`; }
@@ -99,7 +107,6 @@ async function isReactFile(url){
   }catch{return false;}
 }
 
-// Função Snack Expo funcional
 async function openInSnack(file){
   try{
     const res=await fetch(file.download_url);
@@ -110,18 +117,25 @@ async function openInSnack(file){
   }catch(e){ alert('Erro ao abrir no Snack: '+e.message); }
 }
 
-async function render(){
-  const host=document.getElementById('tree');
-  host.innerHTML='';
-  for(const [group, files] of Object.entries(state.groups).sort()){
+// Renderiza árvore recursivamente
+async function renderDir(obj){
+  const frag=document.createDocumentFragment();
+  const entries=Object.entries(obj).filter(([k])=>k!=='__files').sort(([a],[b])=>a.localeCompare(b));
+
+  for(const [dirName, child] of entries){
     const details=document.createElement('details'); details.className='dir'; details.open=true;
-    const summary=document.createElement('summary'); summary.textContent=group;
+    const summary=document.createElement('summary'); summary.textContent=dirName;
     details.appendChild(summary);
+    details.appendChild(await renderDir(child));
+    frag.appendChild(details);
+  }
 
+  const files=(obj.__files||[]).filter(f=>!state.query||f.name.toLowerCase().includes(state.query.toLowerCase()))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  if(files.length){
     const ul=document.createElement('ul'); ul.className='files';
-
     for(const f of files){
-      if(state.query && !f.name.toLowerCase().includes(state.query)) continue;
       const li=document.createElement('li');
       const left=document.createElement('div'); const right=document.createElement('div'); right.className='row-actions';
       left.innerHTML=`<span class="path">${f.name}</span>`;
@@ -150,17 +164,22 @@ async function render(){
       li.append(left,right);
       ul.appendChild(li);
     }
-
-    details.appendChild(ul);
-    host.appendChild(details);
+    frag.appendChild(ul);
   }
+
+  return frag;
+}
+
+async function render(){
+  const host=document.getElementById('tree'); host.innerHTML='';
+  host.appendChild(await renderDir(state.tree));
 }
 
 async function loadRepo(){
   const btn=qs('#reload'); btn.disabled=true; btn.textContent='Carregando…';
   try{
-    const flat=await crawl('');
-    state.groups=groupFiles(flat);
+    state.flat=await crawl('');
+    state.tree=buildTree(state.flat);
     await render();
   }catch(e){ alert(e.message); }
   finally{ btn.disabled=false; btn.textContent='Atualizar'; }
