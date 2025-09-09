@@ -26,7 +26,7 @@
     .controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 12px; align-items: center; }
     .search { display: flex; align-items: center; gap: 8px; background: var(--chip); border: 1px solid var(--border); padding: 10px 12px; border-radius: 12px; }
     .search input { flex: 1; background: transparent; border: 0; outline: 0; color: var(--text); font-size: 0.95rem; }
-    .btn { background: var(--accent); color: #fff; border: 0; padding: 10px 14px; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(255,107,107,.25); }
+    .btn { background: var(--accent); color: #fff; border: 0; padding: 10px 14px; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(255,107,107,.25); text-decoration: none; display: inline-block; text-align: center; }
 
     details.dir { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: #222; margin-bottom: 10px; }
     details.dir > summary { cursor: pointer; font-weight: 700; list-style: none; }
@@ -56,9 +56,14 @@
     </div>
   </header>
 
-  <!-- LINKS DO SNACK EXPO -->
+  <!-- LINK PARA VOLTAR AO GITHUB -->
   <main class="wrap">
-    <section class="expo-links">
+    <section style="margin-bottom: 20px;">
+      <a href="https://github.com/brancazx/exercicios" target="_blank" class="btn">Voltar ao GitHub</a>
+    </section>
+
+    <!-- LINKS DO SNACK EXPO -->
+    <section class="expo-links" style="margin-bottom:20px;">
       <strong>Links do Expo React:</strong>
       <div style="display: flex; gap: 10px; margin-top: 10px;">
         <a href="https://snack.expo.dev/@kethallyn/lanchonete" target="_blank" class="btn">Lanchonete</a>
