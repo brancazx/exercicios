@@ -56,6 +56,17 @@
     </div>
   </header>
 
+  <!-- LINKS DO SNACK EXPO -->
+  <main class="wrap">
+    <section class="expo-links">
+      <strong>Links do Expo React:</strong>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <a href="https://snack.expo.dev/@kethallyn/lanchonete" target="_blank" class="btn">Lanchonete</a>
+        <a href="https://snack.expo.dev/@kethallyn/controle-financeiro" target="_blank" class="btn">Controle Financeiro</a>
+      </div>
+    </section>
+  </main>
+
   <main class="wrap">
     <section class="card">
       <header class="wrap">
@@ -162,21 +173,6 @@
                 aSnack.target='_blank';
                 aSnack.textContent='Snack Expo';
                 right.appendChild(aSnack);
-
-                <!-- LINK EXPO REACT 1 -->
-                const aExpo1 = document.createElement('a');
-                aExpo1.href = '#'; // https://snack.expo.dev/@kethallyn/lanchonete
-                aExpo1.target='_blank';
-                aExpo1.textContent='Expo React 1';
-                right.appendChild(aExpo1);
-
-                <!-- LINK EXPO REACT 2 -->
-                const aExpo2 = document.createElement('a');
-                aExpo2.href = '#'; // https://snack.expo.dev/@kethallyn/controle-financeiro
-                aExpo2.target='_blank';
-                aExpo2.textContent='Expo React 2';
-                right.appendChild(aExpo2);
-
               }
             });
           }
