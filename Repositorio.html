@@ -14,17 +14,30 @@
       --chip: #333333;
       --border: #444444;
     }
+    html, body { height: 100%; }
     body { margin: 0; font-family: system-ui, sans-serif; background: linear-gradient(180deg, var(--bg), #000); color: var(--text); }
-    header { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); background: rgba(42,42,42,.9); border-bottom: 1px solid var(--border); }
+
+    header { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); background: linear-gradient(180deg, rgba(42,42,42,.9), rgba(42,42,42,.7)); border-bottom: 1px solid var(--border); }
     .wrap { max-width: 1100px; margin: 0 auto; padding: 20px; }
-    h1 { margin: 0; font-size: 1.4rem; display: flex; gap: .6rem; }
-    .controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 12px; }
-    .search input { width: 100%; background: var(--chip); border: 1px solid var(--border); padding: 10px 12px; border-radius: 12px; color: var(--text); }
-    .btn { background: var(--accent); color: #fff; border: 0; padding: 10px 14px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-    .btn:disabled{ opacity:.5; cursor:not-allowed }
-    ul.files { list-style: none; padding: 0; margin: 0; }
+
+    h1 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: .6rem; }
+    h1 small { opacity: .7; font-weight: 500; }
+
+    .controls { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 12px; align-items: center; }
+    .search { display: flex; align-items: center; gap: 8px; background: var(--chip); border: 1px solid var(--border); padding: 10px 12px; border-radius: 12px; }
+    .search input { flex: 1; background: transparent; border: 0; outline: 0; color: var(--text); font-size: 0.95rem; }
+    .btn { background: var(--accent); color: #fff; border: 0; padding: 10px 14px; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(255,107,107,.25); }
+
+    details.dir { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: #222; margin-bottom: 10px; }
+    details.dir > summary { cursor: pointer; font-weight: 700; list-style: none; }
+
+    ul.files { list-style: none; padding-left: 0; margin: 8px 0 0; }
     ul.files li { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-bottom: 1px dashed rgba(255,255,255,.06); }
+    ul.files li:last-child { border-bottom: 0; }
     .path { font-family: monospace; font-size: .95rem; }
+    .badges { display: inline-flex; gap: 6px; align-items: center; }
+    .badge { font-size: .75rem; padding: 3px 8px; border-radius: 999px; background: #444; border: 1px solid var(--border); color: var(--muted); }
+
     .row-actions { display: inline-flex; gap: 6px; }
     .row-actions a { text-decoration: none; font-size: .85rem; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--border); background: #333; color: var(--text); }
     .row-actions a:hover{ background:#444 }
@@ -33,169 +46,150 @@
 <body>
   <header>
     <div class="wrap">
-      <h1>
-        📁 Índice de Arquivos
-        <small>GitHub → <code id="repoLabel">brancazx/exercicios</code></small>
-      </h1>
+      <h1>📁 Índice de Arquivos <small><code id="repoLabel"></code></small></h1>
       <div class="controls">
-        <input id="q" type="search" placeholder="Filtrar por nome, extensão…" />
+        <div class="search" role="search">
+          <input id="q" type="search" placeholder="Filtrar por nome ou extensão…" />
+        </div>
         <button id="reload" class="btn">Atualizar</button>
       </div>
     </div>
   </header>
 
-  <main>
-    <div class="wrap">
-      <section class="card">
-        <div class="content">
-          <div id="tree"></div>
-        </div>
-      </section>
-    </div>
+  <main class="wrap">
+    <section class="card">
+      <header class="wrap">
+        <strong>Arquivos agrupados</strong>
+      </header>
+      <div id="tree" class="content"></div>
+    </section>
   </main>
 
-  <footer class="wrap">
-    Feito com ❤️ usando a API pública do GitHub.
-  </footer>
-
   <script>
-    const OWNER = "brancazx";
-    const REPO  = "exercicios";
-    const BRANCH = "main";
+    const OWNER = 'brancazx';
+    const REPO  = 'exercicios';
+    const BRANCH = 'main';
 
-    const state = { flat: [], query: "" };
+    const repoLabel = document.getElementById('repoLabel');
+    repoLabel.textContent = `${OWNER}/${REPO}`;
 
-    function extOf(path) {
-      const m = path.toLowerCase().match(/\.([^.\/]+)$/);
-      return m ? `.${m[1]}` : "";
-    }
+    const qs = (s, el=document) => el.querySelector(s);
 
-    function matchesQuery(path) {
-      const q = state.query.trim().toLowerCase();
-      if (!q) return true;
-      return path.toLowerCase().includes(q);
-    }
+    const state = {
+      groups: {}, query: ''
+    };
 
-    document.getElementById("q").addEventListener("input", e => {
-      state.query = e.target.value;
-      render();
-    });
-
-    document.getElementById("reload").addEventListener("click", () => loadRepo());
-
-    async function gh(path="") {
-      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`;
+    async function gh(path=''){
+      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}?ref=${encodeURIComponent(BRANCH)}`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Erro: "+url);
+      if(!res.ok) throw new Error('Falha ao carregar: '+url);
       return res.json();
     }
 
-    async function crawl(dir="") {
+    async function crawl(dir=''){
       const items = await gh(dir);
-      let out = [];
-      for (const it of items) {
-        if (it.type === "file") {
-          out.push(it);
-        } else if (it.type === "dir") {
-          const children = await crawl(it.path);
-          out = out.concat(children);
-        }
+      let files = [];
+      for(const it of items){
+        if(it.type === 'file') files.push(it);
+        else if(it.type === 'dir') files.push(...await crawl(it.path));
       }
-      return out;
+      return files;
     }
 
-    function ghPagesUrl(path) {
+    function groupFiles(files){
+      const groups = {};
+      for(const f of files){
+        const base = f.name.split('.')[0];
+        groups[base] ||= [];
+        groups[base].push(f);
+      }
+      return groups;
+    }
+
+    function ghPagesUrl(path){
       return `https://${OWNER}.github.io/${REPO}/${path}`;
     }
 
-    async function checkReactFile(file) {
-      try {
-        const res = await fetch(file.download_url);
-        const code = await res.text();
-        return code.includes("import React") || code.includes("from 'react'");
-      } catch {
-        return false;
-      }
+    async function isReactFile(url){
+      try{
+        const res = await fetch(url);
+        const txt = await res.text();
+        return txt.includes('import React') || txt.includes('export default function');
+      }catch{ return false; }
     }
 
-    async function openInSnack(file) {
-      try {
-        const res = await fetch(file.download_url);
-        const code = await res.text();
-        const encoded = encodeURIComponent(code);
-        const url = `https://snack.expo.dev/embedded?platform=web&name=${encodeURIComponent(file.name)}&files[App.js]=${encoded}`;
-        window.open(url, "_blank");
-      } catch (e) {
-        alert("Erro ao abrir no Snack: " + e.message);
-      }
-    }
+    async function render(){
+      const host = document.getElementById('tree');
+      host.innerHTML = '';
 
-    async function render() {
-      const host = document.getElementById("tree");
-      host.innerHTML = "";
-      const ul = document.createElement("ul");
-      ul.className = "files";
+      for(const [group, files] of Object.entries(state.groups).sort()){
+        const details = document.createElement('details');
+        details.className = 'dir';
+        details.open = true;
+        const summary = document.createElement('summary');
+        summary.textContent = group;
+        details.appendChild(summary);
 
-      for (const f of state.flat.filter(f => matchesQuery(f.path)).sort((a,b)=>a.path.localeCompare(b.path))) {
-        const li = document.createElement("li");
-        const left = document.createElement("div");
-        const right = document.createElement("div");
-        right.className = "row-actions";
+        const ul = document.createElement('ul');
+        ul.className = 'files';
 
-        left.innerHTML = `<span class="path">${f.path}</span>`;
+        for(const f of files){
+          if(state.query && !f.name.toLowerCase().includes(state.query)) continue;
 
-        const aRaw = document.createElement("a");
-        aRaw.href = f.download_url;
-        aRaw.target = "_blank";
-        aRaw.textContent = "RAW";
+          const li = document.createElement('li');
+          const left = document.createElement('div');
+          const right = document.createElement('div');
+          right.className = 'row-actions';
 
-        const aHub = document.createElement("a");
-        aHub.href = f.html_url;
-        aHub.target = "_blank";
-        aHub.textContent = "GitHub";
+          left.innerHTML = `<span class="path">${f.name}</span>`;
+          const b = document.createElement('span'); b.className='badge'; b.textContent = (f.size/1024).toFixed(1)+' KB';
+          left.appendChild(b);
 
-        right.append(aRaw, aHub);
+          const aRaw = document.createElement('a'); aRaw.href = f.download_url; aRaw.target='_blank'; aRaw.textContent='RAW';
+          const aHub = document.createElement('a'); aHub.href = f.html_url; aHub.target='_blank'; aHub.textContent='GitHub';
+          right.append(aRaw,aHub);
 
-        if (extOf(f.path) === ".html") {
-          const aPages = document.createElement("a");
-          aPages.href = ghPagesUrl(f.path);
-          aPages.target = "_blank";
-          aPages.textContent = "Pages";
-          right.appendChild(aPages);
+          if(f.name.endsWith('.html')){
+            const aPages = document.createElement('a'); aPages.href = ghPagesUrl(f.path); aPages.target='_blank'; aPages.textContent='Pages';
+            right.appendChild(aPages);
+          }
+
+          if(f.name.endsWith('.js')){
+            isReactFile(f.download_url).then(isReact=>{
+              if(isReact){
+                const aSnack = document.createElement('a');
+                aSnack.href = `https://snack.expo.dev/?files=App.js:${encodeURIComponent(f.download_url)}`;
+                aSnack.target='_blank';
+                aSnack.textContent='Snack Expo';
+                right.appendChild(aSnack);
+              }
+            });
+          }
+
+          li.append(left,right);
+          ul.appendChild(li);
         }
 
-        if (extOf(f.path) === ".js") {
-          // verificar se é React
-          checkReactFile(f).then(isReact => {
-            if (isReact) {
-              const aSnack = document.createElement("a");
-              aSnack.href = "#";
-              aSnack.textContent = "Snack Expo";
-              aSnack.onclick = ev => { ev.preventDefault(); openInSnack(f); };
-              right.appendChild(aSnack);
-            }
-          });
-        }
-
-        li.append(left, right);
-        ul.appendChild(li);
+        details.appendChild(ul);
+        host.appendChild(details);
       }
-
-      host.appendChild(ul);
     }
 
-    async function loadRepo() {
-      const btn = document.getElementById("reload");
-      btn.disabled = true; btn.textContent = "Carregando…";
+    async function loadRepo(){
+      const btn = qs('#reload');
+      btn.disabled = true; btn.textContent = 'Carregando…';
       try {
-        state.flat = await crawl("");
-        render();
-      } catch (e) {
-        alert(e.message);
-      } finally {
-        btn.disabled = false; btn.textContent = "Atualizar";
-      }
+        const flat = await crawl('');
+        state.groups = groupFiles(flat);
+        await render();
+      } catch (e){ alert(e.message); }
+      finally { btn.disabled = false; btn.textContent = 'Atualizar'; }
     }
+
+    qs('#q').addEventListener('input', e=>{
+      state.query = e.target.value.toLowerCase();
+      render();
+    });
 
     loadRepo();
   </script>
