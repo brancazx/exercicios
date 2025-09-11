@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Corra com seu Carrinho 🚗💨</title>
+  <title>Corra Sempre 🚗💨</title>
   <style>
     body {
       margin: 0;
@@ -16,7 +16,7 @@
     canvas {
       border: 3px solid #000;
       border-radius: 10px;
-      background: #228B22; /* grama */
+      background: #228B22;
       display: block;
     }
     #menu {
@@ -51,9 +51,17 @@
 <body>
   <canvas id="gameCanvas" width="500" height="700"></canvas>
   <div id="menu">
-    <h1>🚗 Corra com seu Carrinho</h1>
+    <h1>🚗 Corra Infinitamente</h1>
     <button id="startBtn">Jogar</button>
   </div>
+
+  <!-- Sons -->
+  <audio id="somAmbiente">
+    <source src="ambiente.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="somBuzina">
+    <source src="buzina.mp3" type="audio/mpeg">
+  </audio>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -64,41 +72,50 @@
     const largura = canvas.width;
     const altura = canvas.height;
 
-    // Carro jogador (velocidade horizontal reduzida e sem movimento vertical automático)
+    const somAmbiente = document.getElementById("somAmbiente");
+    const somBuzina = document.getElementById("somBuzina");
+
+    // Carro do jogador
     const carro = {
       x: largura / 2 - 25,
-      y: altura - 120,  // fixo verticalmente
+      y: altura - 120,
       w: 50,
       h: 90,
-      vel: 6   // horizontal (antes 10)
-      // velY removido
+      vel: 6
     };
 
-    // Carrinhos inimigos
+    // Inimigos
     let inimigos = [];
     const inimigoW = 50;
     const inimigoH = 90;
-    const velInimigo = 6;
+    let velInimigo = 6;
     let tempoSpawn = 0;
+    const coresInimigos = ["red", "blue", "white", "purple", "orange"];
 
     // Pista
     let linhaPista = 0;
     const velPista = 5;
 
-    // Estados
+    // Estado
     let gameOver = false;
     let jogando = false;
     let score = 0;
 
     // Controles
     const teclas = {};
-    document.addEventListener("keydown", e => teclas[e.key] = true);
+    document.addEventListener("keydown", e => {
+      teclas[e.key] = true;
+      if (e.key === "b" || e.key === "B") {
+        somBuzina.currentTime = 0;
+        somBuzina.play();
+      }
+    });
     document.addEventListener("keyup", e => teclas[e.key] = false);
 
-    // --- Desenho dos carrinhos ---
+    // --- Função desenhar carro ---
     function desenharCarro(x, y, w, h, cor) {
       ctx.fillStyle = cor;
-      ctx.fillRect(x, y, w, h); // corpo
+      ctx.fillRect(x, y, w, h);
 
       // para-brisa
       ctx.fillStyle = "white";
@@ -110,23 +127,46 @@
 
       // rodas
       ctx.fillStyle = "black";
-      ctx.fillRect(x - 6, y + 5, 8, 25);  // frente esquerda
-      ctx.fillRect(x + w - 2, y + 5, 8, 25); // frente direita
-      ctx.fillRect(x - 6, y + h - 30, 8, 25); // trás esquerda
-      ctx.fillRect(x + w - 2, y + h - 30, 8, 25); // trás direita
+      ctx.fillRect(x - 6, y + 5, 8, 25);
+      ctx.fillRect(x + w - 2, y + 5, 8, 25);
+      ctx.fillRect(x - 6, y + h - 30, 8, 25);
+      ctx.fillRect(x + w - 2, y + h - 30, 8, 25);
+
+      // --- detalhes extras ---
+      if (Math.random() < 0.3) {
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(x + w/2 - 5, y + 60, 10, 20); // faixa
+      }
+      if (Math.random() < 0.2) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(x + 10, y + 55, w - 20, 5); // teto
+      }
     }
 
+    // --- Praia + estrada ---
     function desenharPista() {
-      // fundo (grama)
-      ctx.fillStyle = "#228B22";
+      ctx.fillStyle = "#87CEFA"; // céu/mar
       ctx.fillRect(0, 0, largura, altura);
+
+      // ondas
+      ctx.fillStyle = "#00BFFF";
+      for (let i = 0; i < largura; i += 40) {
+        ctx.beginPath();
+        ctx.arc(i, linhaPista % 60, 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // areia
+      ctx.fillStyle = "#FFD700";
+      ctx.fillRect(0, 0, 100, altura);
+      ctx.fillRect(400, 0, 100, altura);
 
       // pista
       ctx.fillStyle = "#444";
       ctx.fillRect(100, 0, 300, altura);
 
-      // bordas
-      ctx.fillStyle = "#8B4513";
+      // meio-fio preto
+      ctx.fillStyle = "#000";
       ctx.fillRect(95, 0, 10, altura);
       ctx.fillRect(395, 0, 10, altura);
 
@@ -139,18 +179,30 @@
       if (linhaPista >= 60) linhaPista = 0;
     }
 
+    // Criar inimigos
     function criarInimigo() {
       const x = Math.floor(Math.random() * (320 - 120)) + 120;
-      inimigos.push({ x, y: -inimigoH, w: inimigoW, h: inimigoH });
+      const cor = coresInimigos[Math.floor(Math.random() * coresInimigos.length)];
+      inimigos.push({ x, y: -inimigoH, w: inimigoW, h: inimigoH, cor });
     }
 
+    // Mover inimigos
     function moverInimigos() {
       if (!gameOver) {
         inimigos.forEach(carro => carro.y += velInimigo);
-        inimigos = inimigos.filter(carro => carro.y < altura);
+
+        inimigos.forEach((c, i) => {
+          if (c.y >= altura) {
+            somAmbiente.volume = 0.5;
+            somAmbiente.currentTime = 0;
+            somAmbiente.play();
+            inimigos.splice(i, 1);
+          }
+        });
       }
     }
 
+    // Colisão
     function verificarColisao() {
       for (let inimigo of inimigos) {
         if (carro.x < inimigo.x + inimigo.w &&
@@ -163,14 +215,13 @@
       return false;
     }
 
+    // Atualizar
     function atualizar() {
       if (!jogando || gameOver) return;
 
-      // mover carro horizontalmente
       if (teclas["ArrowLeft"] && carro.x > 120) carro.x -= carro.vel;
       if (teclas["ArrowRight"] && carro.x < 330) carro.x += carro.vel;
 
-      // spawn inimigos
       tempoSpawn++;
       if (tempoSpawn > 80) {
         criarInimigo();
@@ -183,22 +234,24 @@
         gameOver = true;
       }
 
-      // pontuação
       score++;
+
+      // Aumentar velocidade a cada 1500 pontos
+      if (score % 1500 === 0) {
+        velInimigo += 1;
+      }
     }
 
+    // Desenhar
     function desenhar() {
       desenharPista();
 
-      // desenhar jogador
       desenharCarro(carro.x, carro.y, carro.w, carro.h, "orange");
 
-      // desenhar inimigos
       inimigos.forEach(c => {
-        desenharCarro(c.x, c.y, c.w, c.h, "purple");
+        desenharCarro(c.x, c.y, c.w, c.h, c.cor);
       });
 
-      // pontuação
       if (jogando && !gameOver) {
         ctx.fillStyle = "white";
         ctx.font = "bold 24px Arial";
@@ -219,6 +272,7 @@
       }
     }
 
+    // Loop
     function loop() {
       atualizar();
       desenhar();
@@ -233,9 +287,10 @@
 
     function resetarJogo() {
       carro.x = largura / 2 - 25;
-      carro.y = altura - 120;  // fixo verticalmente
+      carro.y = altura - 120;
       inimigos = [];
       score = 0;
+      velInimigo = 6;
       gameOver = false;
       jogando = true;
     }
