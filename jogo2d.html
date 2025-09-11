@@ -18,6 +18,10 @@
       border-radius: 10px;
       background: #228B22;
       display: block;
+      transition: filter 0.5s;
+    }
+    canvas.blur {
+      filter: blur(4px);
     }
     #menu {
       position: absolute;
@@ -39,17 +43,18 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      background: #ff4444;
+      background: #007bff; /* azul */
       color: white;
       font-weight: bold;
+      transition: background 0.2s;
     }
     button:hover {
-      background: #ff2222;
+      background: #0056b3; /* azul mais escuro */
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="500" height="700"></canvas>
+  <canvas id="gameCanvas" width="500" height="700" class="blur"></canvas>
   <div id="menu">
     <h1>🚗 Corra Infinitamente</h1>
     <button id="startBtn">Jogar</button>
@@ -117,38 +122,32 @@
       ctx.fillStyle = cor;
       ctx.fillRect(x, y, w, h);
 
-      // para-brisa
       ctx.fillStyle = "white";
       ctx.fillRect(x + 8, y + 10, w - 16, 20);
 
-      // janelas
       ctx.fillStyle = "lightgray";
       ctx.fillRect(x + 8, y + 35, w - 16, 20);
 
-      // rodas
       ctx.fillStyle = "black";
       ctx.fillRect(x - 6, y + 5, 8, 25);
       ctx.fillRect(x + w - 2, y + 5, 8, 25);
       ctx.fillRect(x - 6, y + h - 30, 8, 25);
       ctx.fillRect(x + w - 2, y + h - 30, 8, 25);
 
-      // --- detalhes extras ---
       if (Math.random() < 0.3) {
         ctx.fillStyle = "yellow";
-        ctx.fillRect(x + w/2 - 5, y + 60, 10, 20); // faixa
+        ctx.fillRect(x + w/2 - 5, y + 60, 10, 20);
       }
       if (Math.random() < 0.2) {
         ctx.fillStyle = "black";
-        ctx.fillRect(x + 10, y + 55, w - 20, 5); // teto
+        ctx.fillRect(x + 10, y + 55, w - 20, 5);
       }
     }
 
-    // --- Praia + estrada ---
     function desenharPista() {
-      ctx.fillStyle = "#87CEFA"; // céu/mar
+      ctx.fillStyle = "#87CEFA"; 
       ctx.fillRect(0, 0, largura, altura);
 
-      // ondas
       ctx.fillStyle = "#00BFFF";
       for (let i = 0; i < largura; i += 40) {
         ctx.beginPath();
@@ -156,21 +155,17 @@
         ctx.fill();
       }
 
-      // areia
       ctx.fillStyle = "#FFD700";
       ctx.fillRect(0, 0, 100, altura);
       ctx.fillRect(400, 0, 100, altura);
 
-      // pista
       ctx.fillStyle = "#444";
       ctx.fillRect(100, 0, 300, altura);
 
-      // meio-fio preto
       ctx.fillStyle = "#000";
       ctx.fillRect(95, 0, 10, altura);
       ctx.fillRect(395, 0, 10, altura);
 
-      // linhas do meio
       ctx.fillStyle = "white";
       for (let i = -20; i < altura; i += 60) {
         ctx.fillRect(245, i + linhaPista, 10, 40);
@@ -179,18 +174,15 @@
       if (linhaPista >= 60) linhaPista = 0;
     }
 
-    // Criar inimigos
     function criarInimigo() {
       const x = Math.floor(Math.random() * (320 - 120)) + 120;
       const cor = coresInimigos[Math.floor(Math.random() * coresInimigos.length)];
       inimigos.push({ x, y: -inimigoH, w: inimigoW, h: inimigoH, cor });
     }
 
-    // Mover inimigos
     function moverInimigos() {
       if (!gameOver) {
         inimigos.forEach(carro => carro.y += velInimigo);
-
         inimigos.forEach((c, i) => {
           if (c.y >= altura) {
             somAmbiente.volume = 0.5;
@@ -202,7 +194,6 @@
       }
     }
 
-    // Colisão
     function verificarColisao() {
       for (let inimigo of inimigos) {
         if (carro.x < inimigo.x + inimigo.w &&
@@ -215,7 +206,6 @@
       return false;
     }
 
-    // Atualizar
     function atualizar() {
       if (!jogando || gameOver) return;
 
@@ -230,27 +220,16 @@
 
       moverInimigos();
 
-      if (verificarColisao()) {
-        gameOver = true;
-      }
+      if (verificarColisao()) gameOver = true;
 
       score++;
-
-      // Aumentar velocidade a cada 1500 pontos
-      if (score % 1500 === 0) {
-        velInimigo += 1;
-      }
+      if (score % 1500 === 0) velInimigo += 1;
     }
 
-    // Desenhar
     function desenhar() {
       desenharPista();
-
       desenharCarro(carro.x, carro.y, carro.w, carro.h, "orange");
-
-      inimigos.forEach(c => {
-        desenharCarro(c.x, c.y, c.w, c.h, c.cor);
-      });
+      inimigos.forEach(c => desenharCarro(c.x, c.y, c.w, c.h, c.cor));
 
       if (jogando && !gameOver) {
         ctx.fillStyle = "white";
@@ -265,14 +244,12 @@
         ctx.font = "bold 30px Arial";
         ctx.fillStyle = "yellow";
         ctx.fillText("Pontuação: " + score, largura / 2 - 90, altura / 2 + 50);
-
         ctx.fillStyle = "white";
         ctx.font = "20px Arial";
         ctx.fillText("Pressione ENTER para reiniciar", largura / 2 - 160, altura / 2 + 100);
       }
     }
 
-    // Loop
     function loop() {
       atualizar();
       desenhar();
@@ -280,9 +257,7 @@
     }
 
     document.addEventListener("keydown", e => {
-      if (gameOver && e.key === "Enter") {
-        resetarJogo();
-      }
+      if (gameOver && e.key === "Enter") resetarJogo();
     });
 
     function resetarJogo() {
@@ -297,6 +272,7 @@
 
     startBtn.addEventListener("click", () => {
       menu.style.display = "none";
+      canvas.classList.remove("blur"); // remove desfoque suavemente
       resetarJogo();
     });
 
