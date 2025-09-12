@@ -21,7 +21,6 @@
     }
     button:hover { background:#ff2222; }
 
-    /* Novo estilo Game Over */
     #gameOver {
       position:absolute; 
       top:50%; left:50%; 
@@ -84,6 +83,10 @@
   </div>
   <canvas id="gameCanvas"></canvas>
 
+  <!-- 🎵 Espaço para adicionar sons -->
+  <audio id="bgMusic" src="Riders On The Storm.mp3" loop></audio>
+  <audio id="hornSound" src="buzina.mp3"></audio>
+
   <script src="https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.min.js"></script>
   <script>
   const canvas = document.getElementById("gameCanvas");
@@ -95,13 +98,11 @@
   const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 1000);
   camera.position.set(0,15,20);
 
-  // luzes
   scene.add(new THREE.HemisphereLight(0xffffff,0x444444,0.9));
   const dir = new THREE.DirectionalLight(0xffffff,0.8);
   dir.position.set(20,40,20);
   scene.add(dir);
 
-  // chão (grama)
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(200,200),
     new THREE.MeshStandardMaterial({color:0x228B22})
@@ -109,7 +110,6 @@
   ground.rotation.x = -Math.PI/2;
   scene.add(ground);
 
-  // pista
   const road = new THREE.Mesh(
     new THREE.PlaneGeometry(12,200),
     new THREE.MeshStandardMaterial({color:0x333333})
@@ -118,7 +118,6 @@
   road.position.y = 0.01;
   scene.add(road);
 
-  // faixas
   const stripes = [];
   for(let i=0;i<20;i++){
     const stripe = new THREE.Mesh(
@@ -131,7 +130,6 @@
     stripes.push(stripe);
   }
 
-  // Função: criar rodas
   function criarRoda(){
     const roda = new THREE.Mesh(
       new THREE.CylinderGeometry(0.4,0.4,0.3,16),
@@ -141,46 +139,36 @@
     return roda;
   }
 
-  // Função: criar carro
   function criarCarro(cor){
     const carro = new THREE.Group();
-
-    // corpo
     const corpo = new THREE.Mesh(
       new THREE.BoxGeometry(1.5,0.6,3),
       new THREE.MeshStandardMaterial({color:cor})
     );
     corpo.position.y = 0.6;
     carro.add(corpo);
-
-    // cabine
     const cabine = new THREE.Mesh(
       new THREE.BoxGeometry(1.2,0.5,1.2),
       new THREE.MeshStandardMaterial({color:0xffffff, transparent:true, opacity:0.8})
     );
     cabine.position.set(0,1,-0.2);
     carro.add(cabine);
-
-    // rodas
     const offsets = [
-      [-0.8,0.3,1.2], [0.8,0.3,1.2], // frente
-      [-0.8,0.3,-1.2], [0.8,0.3,-1.2] // traseira
+      [-0.8,0.3,1.2], [0.8,0.3,1.2],
+      [-0.8,0.3,-1.2], [0.8,0.3,-1.2]
     ];
     offsets.forEach(pos=>{
       const r = criarRoda();
       r.position.set(...pos);
       carro.add(r);
     });
-
     return carro;
   }
 
-  // Jogador
   const player = criarCarro(0xff8800);
   player.position.set(0,0,10);
   scene.add(player);
 
-  // inimigos
   const enemies = [];
   function spawnEnemy(){
     const cores = [0x9933ff, 0xff3333, 0x33ccff, 0xffff33];
@@ -190,7 +178,6 @@
     enemies.push(enemy);
   }
 
-  // árvores
   const arvores = [];
   function criarArvore(x,z){
     const tronco = new THREE.Mesh(
@@ -216,7 +203,6 @@
     criarArvore(10, -i*8);
   }
 
-  // nuvens
   const nuvens = [];
   function criarNuvem(x,y,z){
     const nuvem = new THREE.Group();
@@ -236,13 +222,11 @@
     criarNuvem(-20+Math.random()*40, 15+Math.random()*5, -i*25);
   }
 
-  // HUD
   const scoreEl = document.getElementById("score");
   const gameOverEl = document.getElementById("gameOver");
   let score=0, alive=false, gameOver=false;
   let spawnTimer=0;
 
-  // controles
   const keys={};
   document.addEventListener("keydown", e=> keys[e.code]=true);
   document.addEventListener("keyup", e=> keys[e.code]=false);
@@ -256,6 +240,10 @@
     scoreEl.textContent=0;
     gameOverEl.classList.remove("show");
     alive=true;
+
+    // reinicia música de fundo
+    bgMusic.currentTime = 0;
+    bgMusic.play();
   }
 
   document.getElementById("startBtn").onclick=()=>{
@@ -266,29 +254,24 @@
   function animate(){
     requestAnimationFrame(animate);
     if(alive && !gameOver){
-      // controles
       if(keys["ArrowLeft"] && player.position.x>-5) player.position.x-=0.2;
       if(keys["ArrowRight"] && player.position.x<5) player.position.x+=0.2;
 
-      // faixas
       stripes.forEach(s=>{
         s.position.z+=0.5;
         if(s.position.z>20) s.position.z=-180;
       });
 
-      // árvores
       arvores.forEach(a=>{
         a.position.z+=0.5;
         if(a.position.z>20) a.position.z=-200;
       });
 
-      // nuvens
       nuvens.forEach(n=>{
         n.position.x+=0.01;
         if(n.position.x>25) n.position.x=-25;
       });
 
-      // inimigos
       spawnTimer++;
       if(spawnTimer>60){
         spawnEnemy();
@@ -296,7 +279,6 @@
       }
       enemies.forEach(e=>{ e.position.z+=0.4; });
 
-      // colisão
       const playerBox = new THREE.Box3().setFromObject(player);
       for(const e of enemies){
         const eBox = new THREE.Box3().setFromObject(e);
@@ -304,15 +286,14 @@
           gameOver=true;
           gameOverEl.querySelector("#finalScore").textContent = "Pontuação: " + score;
           gameOverEl.classList.add("show");
+          bgMusic.pause();
         }
       }
 
-      // pontuação
       score++;
       scoreEl.textContent=score;
     }
 
-    // camera
     camera.position.x = player.position.x*0.5;
     camera.lookAt(player.position.x,0,player.position.z-5);
 
@@ -324,6 +305,12 @@
 
   document.addEventListener("keydown", e=>{
     if(gameOver && e.code==="Enter"){ resetGame(); }
+
+    // 🚨 buzina
+    if(e.code === "KeyH"){
+      hornSound.currentTime = 0;
+      hornSound.play();
+    }
   });
 
   window.addEventListener("resize",()=>{
@@ -331,6 +318,12 @@
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
   });
+
+  // pega os elementos de áudio
+  const bgMusic = document.getElementById("bgMusic");
+  const hornSound = document.getElementById("hornSound");
+  bgMusic.volume = 0.4; // volume da trilha
+  hornSound.volume = 1.0; // volume da buzina
   </script>
 </body>
 </html>
