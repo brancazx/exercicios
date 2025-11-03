@@ -1,75 +1,117 @@
 body {
-    /* Estilo geral da página */
-    font-family: Arial, sans-serif; /* Fonte do texto */
-    margin: 0; /* Remove margens padrão */
-    padding: 0; /* Remove espaçamentos padrão */
-    background-color: #fdf6e3; /* Cor de fundo clara */
-    color: #333; /* Cor do texto */
-  }
-  
-  header {
-    /* Estilo do cabeçalho */
-    background-color: #ffcc00; /* Fundo amarelo */
-    padding: 20px; /* Espaçamento interno */
-    text-align: center; /* Centraliza o conteúdo */
-  }
-  
-  .logo {
-    /* Estilo da imagem do logo */
-    width: 80px; /* Largura da imagem */
-    height: auto; /* Altura proporcional */
-    margin-bottom: 10px; /* Espaço abaixo da imagem */
-  }
-  
-  h1 {
-    /* Estilo do título principal */
-    margin: 0; /* Remove margem padrão */
-    font-size: 2.5em; /* Tamanho grande da fonte */
-  }
-  
-  .cardapio {
-    /* Estilo da seção do cardápio */
-    padding: 20px; /* Espaçamento interno */
-  }
-  
-  .cardapio h2 {
-    /* Estilo do subtítulo do cardápio */
-    font-size: 2em; /* Tamanho médio da fonte */
-    margin-bottom: 10px; /* Espaço abaixo do título */
-  }
-  
-  .cardapio ul {
-    /* Estilo da lista de itens */
-    list-style-type: none; /* Remove bolinhas da lista */
-    padding: 0; /* Remove espaçamento interno */
-  }
-  
-  .cardapio li {
-    /* Estilo de cada item do cardápio */
-    background-color: #fff8dc; /* Fundo claro */
-    margin-bottom: 12px; /* Espaço entre os itens */
-    padding: 10px; /* Espaçamento interno */
-    border-radius: 5px; /* Bordas arredondadas */
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.1); /* Sombra leve */
-    display: flex; /* Alinha imagem e texto lado a lado */
-    align-items: center; /* Centraliza verticalmente */
-    gap: 15px; /* Espaço entre imagem e texto */
-  }
-  
-  .cardapio li img {
-    /* Estilo das imagens dos itens */
-    width: 50px; /* Tamanho fixo */
-    height: auto; /* Altura proporcional */
-    border-radius: 5px; /* Bordas arredondadas */
-  }
-  
-  footer {
-    /* Estilo do rodapé */
-    background-color: #ffcc00; /* Fundo amarelo */
-    text-align: center; /* Centraliza o texto */
-    padding: 10px; /* Espaçamento interno */
-    position: fixed; /* Fixa no fundo da tela */
-    bottom: 0; /* Alinha ao fundo */
-    width: 100%; /* Ocupa toda a largura */
-  }
-  
+  font-family: 'Comic Sans MS', sans-serif;
+  background-color: #eaf6ff;
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  color: #1b4f72;
+  font-size: 30px;
+}
+
+h2 {
+  color: #117a65;
+}
+
+p {
+  color: #2c3e50;
+}
+
+.board {
+  display: grid;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px auto;
+}
+
+.card {
+  width: 110px;
+  height: 110px;
+  background-color: #3498db;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 10px;
+}
+
+.card-front {
+  background-color: #3498db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+}
+
+.card-back {
+  background-color: #fff;
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-back img {
+  width: 80px;
+  height: 80px;
+}
+
+button {
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #2ecc71;
+}
+
+#btn-reset {
+  background-color: #e67e22;
+}
+
+#btn-reset:hover {
+  background-color: #f39c12;
+}
+
+#mensagem {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+footer {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #34495e;
+}
